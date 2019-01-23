@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <p>Hi, <a href="{% url 'logout' %}">{{ user.username }}</a></p>
+    {% endif %}
+
+    {% if message %}
+        <p>Your email has been sent</p>
+    {% endif %}
+
+    <a href="{% url 'email_service:sent_emails' %}">Sent Emails</a>
+    <a href="{% url 'email_service:new_email' %}">New Email</a>
+</body>
+</html>

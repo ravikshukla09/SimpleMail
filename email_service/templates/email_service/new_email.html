@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Mail</title>
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <p>Hi, <a href="{% url 'logout' %}">{{ user.username }}</a></p>
+    {% endif %}
+
+    <input id="file-selector" type="file" accept=".csv">
+
+    {% if error %}
+    <strong>Encountered error {{ error }}. Please try again.</strong>
+    {% endif %}
+
+    <form method="POST"> {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Send</button>
+    </form>
+
+</body>
+
+<script >
+        document.getElementById('file-selector').onchange = function() {
+            const file = this.files[0];
+            const reader = new FileReader()
+
+            console.log(file.name);
+            console.log(file.type)
+
+            /* if (!file.type.match('*.csv')) {
+                alert(file.name + " is not a valid csv file");
+            }
+            else {
+            }  */
+
+            var toList = [];
+            var ccList = [];
+            var bccList = [];
+
+            reader.onload = (event) => {
+                const file = event.target.result;
+                const allLines = file.split(/\r\n|\n/);
+
+
+
+                allLines.forEach((line) => {
+                    console.log(line);
+                    words = line.split(',');
+
+                    console.log(words);
+
+                    if (words[0].trim() === "to") {
+                        for (i = 1; i < words.length; i++) {
+                            var currentWord = words[i].trim();
+                            if (validateEmail(currentWord)) {
+                                toList.push(currentWord);
+                            }
+                        }
+                    }
+                    else if (words[0] === "cc"){
+                        for (i = 1; i < words.length; i++) {
+                            var currentWord = words[i].trim();
+                            if (validateEmail(currentWord)) {
+                                ccList.push(currentWord);
+                            }
+                        }
+                    }
+                    else if (words[0] === "bcc") {
+                        for (i = 1; i < words.length; i++) {
+                            var currentWord = words[i].trim();
+                            if (validateEmail(currentWord)) {
+                                bccList.push(currentWord);
+                            }
+                        }
+                    }
+                });
+
+                console.log(toList);
+                console.log(ccList);
+                console.log(bccList);
+
+                document.getElementById("id_to_recipients").value = toList.toString();
+                document.getElementById("id_cc_list").value = ccList.toString();
+                document.getElementById("id_bcc_list").value = bccList.toString();
+
+
+            };
+
+            reader.onerror = (event) => {
+                alert(event.target.error.name);
+            }
+
+            reader.readAsText(file);
+        }
+
+        function validateEmail(mail) {
+            if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail))
+            {
+                return (true);
+            }
+
+            return false;
+        }
+    </script>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if emails %}
+        {% for email in emails %}
+                <div>
+                    <p>To: {{ email.to_recipients }}</p>
+                    <p>Cc: {{ email.cc_list }}</p>
+                    <p>Bcc: {{ email.bcc_list }}</p>
+                    <p>Sent On: {{ email.sent_on }}</p>
+                    <p>Subject: {{ email.subject }}</p>
+                    <p>Message: {{ email.body|linebreaksbr }}</p>
+                </div>
+                <hr>
+        {% endfor %}
+    {% else %}
+        <p>No emails found.</p>
+    {% endif %}
+</body>
+</html>
