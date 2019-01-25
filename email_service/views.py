@@ -15,14 +15,20 @@ def send_email(request):
         form = EmailForm(request.POST)
         if form.is_valid():
             from_sender = request.user
-            to_recipients = form.cleaned_data['to_recipients']
-            cc_list = form.cleaned_data['cc_list']
-            bcc_list = form.cleaned_data['bcc_list']
-            subject = form.cleaned_data['subject']
-            body = form.cleaned_data['body']
+            to_recipients = form.cleaned_data.get('to_recipients')
+            cc_list = form.cleaned_data.get('cc_list')
+            bcc_list = form.cleaned_data.get('bcc_list')
+            subject = form.cleaned_data.get('subject')
+            body = form.cleaned_data.get('body')
+
+            # sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
+            # from_email = Email(from_sender.email)
+            # Mail()
+
 
             try:
                 EmailMessage(subject, body, from_sender.email, to_recipients, bcc_list, cc=cc_list).send()
+
             except socket.gaierror:
                 print(traceback.format_exc())
                 return render(request, 'email_service/new_email.html', {'form': form, 'error': 'socket.gaierror'})
@@ -30,8 +36,8 @@ def send_email(request):
             email = Email.objects.create(from_sender=from_sender, to_recipients=to_recipients,
                                          cc_list=cc_list, bcc_list=bcc_list, subject=subject, body=body)
 
+            # return redirect('index', kwargs={'message': 'Your email has been sent'}, permanent=True)
             return render(request, 'email_service/index.html', {'message': 'Your email has been sent'})
-
     else:
         form = EmailForm()
 
