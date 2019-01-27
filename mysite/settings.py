@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import dj_database_url
+from decouple import config, Csv
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,13 +22,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '14s607==c2(l(7j9&z^%c6fj_61f)v4_n-r)7dzf7+6j91hyo1'
+
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['simple-mail.herokuapp.com']
-
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # Application definition
 
@@ -38,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'email_service',
+    'crispy_forms',
+    'django_elasticsearch_dsl',
 ]
 
 MIDDLEWARE = [
@@ -118,8 +122,10 @@ USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-PROJECT_ROOT   =   os.path.join(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(os.path.abspath(__file__))
+
 STATIC_URL = '/static/'
+
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 
 # Extra lookup directories for collectstatic to find static files
@@ -127,23 +133,71 @@ STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),
 )
 
-#  Add configuration for static files storage using whitenoise
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+#  Configuration for static files storage using whitenoise
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = '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'
+EMAIL_HOST = config('EMAIL_HOST')
+
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 LOGIN_REDIRECT_URL = '/'
+
 LOGOUT_REDIRECT_URL = '/'
 
 ADMINS = [('Ravi', 'ravikshukla09@gmail.com')]
-EMAIL_SUBJECT_PREFIX = "[Django] - Ravi: "
-# SERVER_EMAIL = 'ravikshukla09@gmail.com'
 
-import dj_database_url
-prod_db  =  dj_database_url.config(conn_max_age=500)
+EMAIL_SUBJECT_PREFIX = "[Django] - Ravi: "
+
+prod_db = dj_database_url.config(conn_max_age=500)
+
 DATABASES['default'].update(prod_db)
+
+ELASTICSEARCH_DSL={
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}
+
+LOGGING = {
+  'version': 1,
+  'disable_existing_loggers': False,
+  'formatters': {
+      'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+  },
+  'handlers': {
+        # 'console': {
+        #     'level': 'INFO',
+        #     'class': 'logging.StreamHandler',
+        #     'formatter': 'simple'
+        # },
+        'logstash': {
+            'level': 'INFO',
+            'class': 'logstash.TCPLogstashHandler',
+            'host': 'localhost',
+            'port': 5959, # Default value: 5959
+            'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
+            'message_type': 'django',  # 'type' field in logstash message. Default value: 'logstash'.
+            'fqdn': False, # Fully qualified domain name. Default value: false.
+            'tags': ['django.request'], # list of tags. Default: None.
+        },
+  },
+  'loggers': {
+        'django.request': {
+            'handlers': ['logstash'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['logstash'],
+            'propagate': True,
+        },
+    }
+}

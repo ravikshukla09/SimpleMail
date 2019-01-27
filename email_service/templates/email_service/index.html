@@ -1,19 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    {% if user.is_authenticated %}
-    <p>Hi, <a href="{% url 'logout' %}">{{ user.username }}</a></p>
-    {% endif %}
+{% extends 'email_service/base.html' %}
 
-    {% if message %}
-        <p>Your email has been sent</p>
-    {% endif %}
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+    <!--<meta charset="UTF-8">-->
+    <!--<title>Title</title>-->
+<!--</head>-->
+<!--<body>-->
 
-    <a href="{% url 'email_service:sent_emails' %}">Sent Emails</a>
-    <a href="{% url 'email_service:new_email' %}">New Email</a>
-</body>
-</html>
+{% block htmlcontent %}
+    {% for message in messages %}
+        <p class="lead">{{message}}</p>
+    {% endfor %}
+
+    <a class="btn btn-primary" href="{% url 'email_service:new_email' %}">New Email</a>
+    <a class="btn btn-default" href="{% url 'email_service:sent_emails' %}">Sent Emails</a>
+{% endblock%}

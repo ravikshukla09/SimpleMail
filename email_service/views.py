@@ -1,11 +1,15 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from .forms import EmailForm, SignUpForm
 from .models import Email
+from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 import socket
 import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -29,15 +33,19 @@ def send_email(request):
             try:
                 EmailMessage(subject, body, from_sender.email, to_recipients, bcc_list, cc=cc_list).send()
 
-            except socket.gaierror:
-                print(traceback.format_exc())
+            except Exception:
+                # print(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 return render(request, 'email_service/new_email.html', {'form': form, 'error': 'socket.gaierror'})
 
             email = Email.objects.create(from_sender=from_sender, to_recipients=to_recipients,
                                          cc_list=cc_list, bcc_list=bcc_list, subject=subject, body=body)
 
             # return redirect('index', kwargs={'message': 'Your email has been sent'}, permanent=True)
-            return render(request, 'email_service/index.html', {'message': 'Your email has been sent'})
+
+            logger.info('Email sent for user: ' + str(request.user))
+            messages.add_message(request, messages.INFO, 'Your email has been sent.')
+            return redirect(reverse('email_service:index'))
     else:
         form = EmailForm()
 
@@ -53,6 +61,7 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
+            logger.info('New user signed up: ' + str(username))
             return redirect('/')
     else:
         form = SignUpForm()

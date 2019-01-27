@@ -3,7 +3,9 @@ from django.core.mail import mail_admins
 import datetime
 import socket
 import traceback
+import logging
 
+logger = logging.getLogger(__name__)
 
 def mail_to_admin():
     today = datetime.datetime.now().replace(hour=0, minute=0, second=0)
@@ -19,17 +21,17 @@ def mail_to_admin():
     subject = 'Email Statistics for ' + str(today.date())
     mail_sent = False
 
-    for i in range(5):   # Try 5 times in case mail is not sent due to socket.gaierror
+    for i in range(3):   # Try 3 times in case mail is not sent due to socket.gaierror
         try:
             mail_admins(subject=subject, message=message)
             mail_sent = True
             break
-        except socket.gaierror:
-            # print(type(e).__name__, '.  Retrying...')
+        except Exception:
             print(traceback.format_exc(), '\nRetrying...\n')
 
     if mail_sent is False:
-        print('Admin mail could not be sent after 5 attempts')
+        # print('Admin mail could not be sent after 5 attempts')
+        logger.error('Admin mail could not be sent after 3 attempts')
     else:
-        print('Mail sent.')
+        logger.info('Mail to admin(s) sent at ' + str(datetime.datetime.now()))
 
