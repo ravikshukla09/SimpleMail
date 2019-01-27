@@ -16,8 +16,6 @@ def mail_to_admin():
     for email in emails:
         message += email.sent_on.strftime("%H:%M") + '\n\n'
 
-    # print(message)
-
     subject = 'Email Statistics for ' + str(today.date())
     mail_sent = False
 
@@ -27,10 +25,9 @@ def mail_to_admin():
             mail_sent = True
             break
         except Exception:
-            print(traceback.format_exc(), '\nRetrying...\n')
+            logger.error(traceback.format_exc(), '\nRetrying...\n')
 
     if mail_sent is False:
-        # print('Admin mail could not be sent after 5 attempts')
         logger.error('Admin mail could not be sent after 3 attempts')
     else:
         logger.info('Mail to admin(s) sent at ' + str(datetime.datetime.now()))

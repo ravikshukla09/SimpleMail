@@ -5,14 +5,13 @@ from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
-import socket
 import traceback
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Create your views here.
 
+# Create your views here.
 @login_required()
 def send_email(request):
     if request.method == 'POST':
@@ -25,23 +24,15 @@ def send_email(request):
             subject = form.cleaned_data.get('subject')
             body = form.cleaned_data.get('body')
 
-            # sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
-            # from_email = Email(from_sender.email)
-            # Mail()
-
-
             try:
                 EmailMessage(subject, body, from_sender.email, to_recipients, bcc_list, cc=cc_list).send()
 
-            except Exception:
-                # print(traceback.format_exc())
+            except Exception as e:
                 logger.error(traceback.format_exc())
-                return render(request, 'email_service/new_email.html', {'form': form, 'error': 'socket.gaierror'})
+                return render(request, 'email_service/new_email.html', {'form': form, 'error': str(type(e).__name__)})
 
-            email = Email.objects.create(from_sender=from_sender, to_recipients=to_recipients,
+            Email.objects.create(from_sender=from_sender, to_recipients=to_recipients,
                                          cc_list=cc_list, bcc_list=bcc_list, subject=subject, body=body)
-
-            # return redirect('index', kwargs={'message': 'Your email has been sent'}, permanent=True)
 
             logger.info('Email sent for user: ' + str(request.user))
             messages.add_message(request, messages.INFO, 'Your email has been sent.')
